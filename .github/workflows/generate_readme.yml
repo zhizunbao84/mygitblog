@@ -13,8 +13,8 @@ on:
       - main.py
 
 env:
-  GITHUB_NAME: yihong0618
-  GITHUB_EMAIL: zouzou0208@gmail.com
+  GITHUB_NAME: zhizunbao84
+  GITHUB_EMAIL: zhizunbao84@hotmail.com
 
 jobs:
   sync:
@@ -48,13 +48,13 @@ jobs:
       - name: Generate new md # if you fork or clone this repo, please delete the curl line unless you know why
         run: |
           source venv/bin/activate
-          python main.py ${{ secrets.G_T }} ${{ github.repository }} --issue_numbe '${{ github.event.issue.number }}'
-          curl -H "Content-Type:application/json" -X POST -d '{"inputs": {}, "ref":"main"}' https://api.github.com/repos/yihong0618/2021/actions/workflows/4756004/dispatches -H "Authorization: token ${{ secrets.G_T }}"
+          python main.py ${{ secrets.MY_GITBLOG }} ${{ github.repository }} --issue_numbe '${{ github.event.issue.number }}'
+          
         
       - name: Push README
         uses: github-actions-x/commit@v2.6
         with:
-          github-token: ${{ secrets.G_T }}
+          github-token: ${{ secrets.MY_GITBLOG }}
           commit-message: "Refresh README AND BACK UP"
           files: README.md BACKUP/
           rebase: 'true'
