@@ -188,3 +188,150 @@ select 随机执行一个可运行的 case。如果没有 case 可运行，它�
 所有被发送的表达式都会被求值。
 如果任意某个通信可以进行，它就执行，其他被忽略。
 如果有多个 case 都可以运行，Select 会随机公平地选出一个执行。其他不会执行。否则：1.如果有 default 子句，则执行该语句。2.如果没有 default 子句，select 将阻塞，直到某个通信可以运行；Go 不会重新对 channel 或值进行求值。
+
+---
+
+## 循环语句
+go只有for，没有while。
+go支持goto语句，将控制转移到被标记的语句。
+```
+sum := 0
+for i := 0; i <= 10; i++ {
+        sum += i
+}
+
+sum := 0
+for {
+    sum++ // 无限循环下去
+}
+
+for true  {
+    fmt.Printf("这是无限循环。\n");
+}
+
+// 读取 key 和 value
+for key, value := range map1 {
+  fmt.Printf("key is: %d - value is: %f\n", key, value)
+}
+
+// 读取 key
+for key := range map1 {
+  fmt.Printf("key is: %d\n", key)
+}
+
+// 读取 value
+for _, value := range map1 {
+  fmt.Printf("value is: %f\n", value)
+}
+```
+
+
+## 函数
+定义格式如下：
+```
+func function_name( [parameter list] ) [return_types] {
+   函数体
+}
+
+func max(num1, num2 int) int {
+}
+
+func max(num1, num2 int) (int int) {
+}
+
+/* 声明函数变量 */
+getSquareRoot := func(x float64) float64 {
+  return math.Sqrt(x)
+}
+```
+parameter list和return_types都不是必须的，都是可选的。
+
+默认情况下，Go 语言使用的是值传递，即在调用过程中不会影响到实际参数。
+值传递是指在调用函数时将实际参数复制一份传递到函数中，这样在函数中如果对参数进行修改，将不会影响到实际参数。
+引用传递是指在调用函数时将实际参数的地址（传递指针参数）传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。
+
+函数作为参数传递，实现回调。
+
+### 闭包
+Go 语言支持匿名函数，可作为闭包。匿名函数是一个"内联"语句或表达式。匿名函数的优越性在于可以直接使用函数内的变量，不必申明。
+```
+func add(x1, x2 int) func(x3 int,x4 int)(int,int,int)  {
+    i := 0
+    return func(x3 int,x4 int) (int,int,int){ 
+       i++
+       return i,x1+x2,x3+x4
+    }
+}
+
+// 闭包使用方法，函数声明中的返回值(闭包函数)不用写具体的形参名称
+func add(x1, x2 int) func(int, int) (int, int, int) {
+  i := 0
+  return func(x3, x4 int) (int, int, int) {
+    i += 1
+    return i, x1 + x2, x3 + x4
+  }
+}
+
+add_func := add(1,2)
+fmt.Println(add_func(1,1))
+fmt.Println(add_func(0,0))
+fmt.Println(add_func(2,2))
+
+```
+
+### 方法
+法就是一个包含了接受者的函数，接受者可以是命名类型或者结构体类型的一个值或者是一个指针。所有给定类型的方法属于该类型的方法集。语法格式如下：
+```
+func (variable_name variable_data_type) function_name() [return_type]{
+   /* 函数体*/
+}
+
+
+/* 定义结构体 */
+type Circle struct {
+  radius float64
+}
+
+//该 method 属于 Circle 类型对象中的方法
+func (c Circle) getArea() float64  {
+   //c.radius 即为 Circle 类型对象中的属性
+   return c.radius * c.radius
+}
+// 注意如果想要更改成功c的值，这里需要传指针
+func (c *Circle) changeRadius(radius float64)  {
+   c.radius = radius
+}
+
+// 以下操作将不生效
+//func (c Circle) changeRadius(radius float64)  {
+//   c.radius = radius
+//}
+// 引用类型要想改变值需要传指针
+func change(c *Circle, radius float64)  {
+   c.radius = radius
+}
+
+var c Circle
+fmt.Println(c.radius)
+c.radius = 10.00
+fmt.Println(c.getArea())
+c.changeRadius(20)
+fmt.Println(c.radius)
+change(&c, 30)
+fmt.Println(c.radius)
+
+```
+Go 没有面向对象，而我们知道常见的 Java。
+C++ 等语言中，实现类的方法做法都是编译器隐式的给函数加一个 this 指针，而在 Go 里，这个 this 指针需要明确的申明出来，其实和其它 OO 语言并没有很大的区别。
+
+
+## 变量作用域
+函数内定义的变量称为局部变量，函数外定义的变量称为全局变量，函数定义中的变量称为形式参数。
+
+在函数体外声明的变量称之为全局变量，全局变量可以在整个包甚至外部包（被导出后）使用。
+全局变量与局部变量名称可以相同，但是函数内的局部变量会被优先考虑。
+可通过花括号来控制变量的作用域，花括号中的变量是单独的作用域，同名变量会覆盖外层。
+
+不同类型的局部和全局变量默认值为：int、float32为0，pointer为nil。
+
+在 for 循环的 initialize（a:=0） 中，此时 initialize 中的 a 与外层的 a 不是同一个变量，initialize 中的 a 为 for 循环中的局部变量，因此在执行完 for 循环后，输出 a 的值仍然为 0。
