@@ -335,3 +335,169 @@ C++ 等语言中，实现类的方法做法都是编译器隐式的给函数加�
 不同类型的局部和全局变量默认值为：int、float32为0，pointer为nil。
 
 在 for 循环的 initialize（a:=0） 中，此时 initialize 中的 a 与外层的 a 不是同一个变量，initialize 中的 a 为 for 循环中的局部变量，因此在执行完 for 循环后，输出 a 的值仍然为 0。
+
+---
+
+## 数组
+语法格式如下：
+```
+var variable_name [SIZE] variable_type
+
+balance := [5] int {1,2,3,4,5}
+//长度为5的数组，其元素值依次为：1，2，3，4，5。
+
+balance := [5] int {1,2}
+//长度为 5 的数组，其元素值依次为：1，2，0，0，0 。
+//在初始化时没有指定初值的元素将会赋值为其元素类型 int 的默认值0，string 的默认值是 ""。
+
+balance := [...] int {1,2,3,4,5}
+//长度为 5 的数组，其长度是根据初始化时指定的元素个数决定的。
+
+balance := [5] int { 2:1,3:2,4:3}
+//长度为 5 的数组，key:value，其元素值依次为：0，0，1，2，3。在初始化时指定了 2，3，4 索引中对应的值：1，2，3
+
+balance := [...] int {2:1,4:3}
+//长度为5的数组，起元素值依次为：0，0，1，0，3。由于指定了最大索引 4 对应的值 3，根据初始化的元素个 数确定其长度为5赋值与使用。
+
+balance := [...] int {1,2,3,4,5}
+balance := [] int {1,2,3,4,5}
+//第一个是数组，第二个是切片，没有所谓没有声明长度的数组存在。
+//初始化数组中 {} 中的元素个数不能大于 [] 中的数字。
+//如果忽略 [] 中的数字不设置数组大小，Go 语言会根据元素的个数来设置数组的大小
+//初始化数组长度后，元素可以不进行初始化，或者不进行全部初始化，但未进行数组大小初始化的数组初始化结果元素大小就为多少。
+
+//多维数组声明方式：
+var variable_name [SIZE1][SIZE2]...[SIZEN] variable_type
+//声明了三维的整型数组
+var threedim [5][10][4]int
+
+// 遍历二维数组，3表示行数，2表示列数
+var value = [3][2]int{{1, 2}, {3, 4}, {5, 6}}  
+// 遍历二维数组的其他方法，使用 range  
+// 其实，这里的 i, j 表示行游标和列游标  
+// v2 就是具体的每一个元素  
+// v  就是每一行的所有元素 
+for i, v := range value {
+    for j, v2 := range v {            
+        fmt.Printf("value[%v][%v]=%v \t ", i, j, v2)  
+        fmt.Printf("value[%v][%v]=%v \t ", i, j, value[i][j])      
+    }        
+    fmt.Print(v)        
+    fmt.Println()    
+}
+
+//最后一行的 } 不能单独一行
+//这样是没问题的
+var arr = [3][4]int{
+  {0, 1, 2, 3} ,      {4, 5, 6, 7} ,      {8, 9, 10, 11}}
+
+//把外层括号单独拿到下一层就会报错
+var arr = [3][4]int{
+  {0, 1, 2, 3} ,      {4, 5, 6, 7} ,      {8, 9, 10, 11}
+}
+
+//把外层括号单独拿到下一层但是在结尾加上逗号就可以了
+var arr = [3][4]int{
+  {0, 1, 2, 3} ,      {4, 5, 6, 7} ,      {8, 9, 10, 11},   
+}
+
+//形参设定数组大小：
+void myFunction(param [10]int)
+//形参未设定数组大小：
+void myFunction(param []int)
+
+
+var array = []int{1, 2, 3, 4, 5}
+/* 未定义长度的数组只能传给不限制数组长度的函数 */
+setArray(array)
+/* 定义了长度的数组只能传给限制了相同数组长度的函数 */
+var array2 = [5]int{1, 2, 3, 4, 5}
+setArray2(array2)
+func setArray(params []int) {
+    fmt.Println("params array length of setArray is : ", len(params))
+}
+
+func setArray2(params [5]int) {
+    fmt.Println("params array length of setArray2 is : ", len(params))
+}
+
+
+// Go 语言的数组是值，其长度是其类型的一部分，作为函数参数时，是 值传递，函数中的修改对调用者不可见
+func change1(nums [3]int) {    
+    nums[0] = 4
+}
+// 传递进来数组的内存地址，然后定义指针变量指向该地址，则会改变数组的值
+func change2(nums *[3]int) {    
+    nums[0] = 5
+}
+// Go 语言中对数组的处理，一般采用 切片 的方式，切片包含对底层数组内容的引用，作为函数参数时，类似于 指针传递，函数中的修改对调用者可见
+func change3(nums []int) {    
+    nums[0] = 6
+}
+var nums1 = [3]int{1, 2, 3}   
+var nums2 = []int{1, 2, 3}    
+change1(nums1)    
+fmt.Println(nums1)  //  [1 2 3]     
+change2(&nums1)    
+fmt.Println(nums1)  //  [5 2 3]    
+change3(nums2)    
+fmt.Println(nums2)  //  [6 2 3]
+
+```
+与 c 语言不同，go 的数组作为函数参数传递的是副本，函数内修改数组并不改变原来的数组。
+用for、range遍历数组时，第一个位置的变量为索引号，第二个位置的变量为数组元素的值。
+
+
+
+## 指针
+
+声明格式如下：
+```
+//var-type 为指针类型，var_name 为指针变量名，* 号用于指定变量是作为一个指针
+var var_name *var-type
+
+
+//当一个指针被定义后没有分配到任何变量时，它的值为 nil。
+//nil 指针也称为空指针。
+var  ptr *int
+fmt.Printf("ptr 的值为 : %x\n", ptr  ) //ptr为0
+//空指针判断：
+if(ptr != nil)     /* ptr 不是空指针 */
+if(ptr == nil)    /* ptr 是空指针 */
+
+
+var ptrs [3]*int //指针数组
+v1 := [...]int{1, 2, 3}
+//将number数组的值的地址赋给ptrs
+for i, x := range v1 {
+    ptrs[i] = &x  //这样有问题，最后指针数组的三个元素值和地址都一样
+    ptrs[i] = &v1[i]   //这样才正确
+    //这样也可以
+    //原因在于，x临时变量仅被声明一次，此后都是将迭代 number 出的值赋值给 x ，x 变量的内存地址始终未变
+    //这样再将 x 的地址发送给 ptrs 数组，自然也是相同的。
+    //tmp := x
+    //ptrs[i] = &tmp
+}
+for i, x := range ptrs {
+    fmt.Printf("指针数组：索引:%d 值:%d 值的内存地址:%d\n", i, *x, x)
+}
+
+
+var arr [3]int
+//注意指针数组和数组指针
+var parr [3]*int // 指针数组
+var p *[3]int = &arr // 数组指针
+for k, _ := range arr {
+    parr[k] = &arr[k];
+}
+
+// 输出地址比对
+for i := 0; i < 3; i+=1 {
+    fmt.Println(&arr[i], parr[i], &(*p)[i]);
+}
+
+//如果一个指针变量存放的又是另一个指针变量的地址，则称这个指针变量为指向指针的指针变量。
+//当定义一个指向指针的指针变量时，第一个指针存放第二个指针的地址，第二个指针存放变量的地址
+var ptr **int;
+```
+指针也可以作为函数的参数，形如`func swap(x *int, y *int)`。
