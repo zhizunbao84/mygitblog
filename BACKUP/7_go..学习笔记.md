@@ -448,6 +448,160 @@ fmt.Println(nums2)  //  [6 2 3]
 用for、range遍历数组时，第一个位置的变量为索引号，第二个位置的变量为数组元素的值。
 
 
+## 切片(Slice)
+切片是对数组的抽象。数组的长度不可改变，在特定场景中这样的集合就不太适用，Go 中提供了一种灵活，功能强悍的内置类型切片("动态数组")，与数组相比切片的长度是不固定的，可以追加元素，在追加时可能使切片的容量增大。
+
+```
+//定义切片
+var identifier []type
+var slice1 []type = make([]type, len)
+slice1 := make([]type, len)
+
+// len 是数组的长度并且也是切片的初始长度
+//capacity 为可选参数
+make([]T, length, capacity)
+
+//初始化
+s :=[] int {1,2,3 } 
+//[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3，其 cap=len=3。
+
+s := arr[:] 
+//初始化切片 s，是数组 arr 的引用。
+//将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片。
+s := arr[startIndex:endIndex] 
+//默认 endIndex 时将表示一直到arr的最后一个元素。
+s := arr[:endIndex] 
+//默认 startIndex 时将表示从 arr 的第一个元素开始。
+s := arr[:endIndex] 
+//通过切片 s 初始化切片 s1。
+s1 := s[startIndex:endIndex] 
+//通过内置函数 make() 初始化切片s，[]int 标识为其元素类型为 int 的切片
+s :=make([]int,len,cap) 
+
+//切片是可索引的，并且可以由 len() 方法获取长度。
+//切片提供了计算容量的方法 cap() 可以测量切片最长可以达到多少。
+var numbers = make([]int,3,5)
+fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
+//结果为   len=3 cap=5 slice=[0 0 0]
+
+```
+一个切片在未初始化之前默认为 nil，长度为 0
+```
+var numbers []int
+if(numbers == nil){
+  fmt.Printf("切片是空的")
+}
+```
+可以通过设置起始和截止索引来设置截取切片。
+如果想增加切片的容量，我们必须创建一个新的更大的切片并把原分片的内容都拷贝过来。
+append(list, [params])，动态扩容的机制还有点复杂，待研究，一般不用管。
+使用 copy 函数要注意对于 copy(dst, src)，如果len(dst)>len(src)，则copy src的所有元素，若len(dst)《》len(src)，则只会copy len(dst)个元素。
+```
+var numbers []int
+/* 向切片添加一个元素 */
+numbers = append(numbers, 1)
+/* 同时添加多个元素 */
+numbers = append(numbers, 2,3,4)
+/* 创建切片 numbers1 是之前切片的两倍容量*/
+numbers1 := make([]int, len(numbers), (cap(numbers))*2)
+
+/* 拷贝 numbers 的内容到 numbers1 */
+copy(numbers1,numbers)
+//将numbers展开，将其中每个元素增加到numbers1中
+//数组也可以这么操作
+numbers1 = append(numbers1,numbers...)
+
+/* 数组 - 5 行 2 列*/
+var a = [][]int{{0, 0}, {1, 2}, {2}, {3, 6}, {4, 8}}
+var i, j int
+
+/* 输出数组元素 */
+for i = 0; i < len(a); i++ {
+  for j = 0; j < len(a[i]); j++ {
+     fmt.Printf("a[%d][%d] = %d\n", i, j, a[i][j])
+  }
+}
+//1.二维数组中的元素(一位数组)个数 > 限制的列数,异常;
+//2.二维数组中的元素(一位数组)个数 <= 限制的列数,正常;
+//假设列数为 3, 某个一位数组 {1}, 则后两个元素,默认为 0。
+
+```
+切片，实际的是获取数组的某一部分，len切片<=cap切片<=len数组，切片由三部分组成：指向底层数组的指针、len、cap。
+
+```
+//切片内部结构：
+struct Slice
+{   
+    byte*    array;       // actual data
+    uintgo    len;        // number of elements
+    uintgo    cap;        // allocated number of elements
+
+};
+```
+第一个字段表示 array 的指针，是真实数据的指针第二个是表示 slice 的长度，第三个是表示 slice 的容量。
+所以 unsafe.Sizeof(切片)永远都是 24。
+
+当把 slice 作为参数，本身传递的是值，但其内容就 byte* array，实际传递的是引用，所以可以在函数内部修改，但如果对 slice 本身做 append，而且导致 slice 进行了扩容，实际扩容的是函数内复制的一份切片，对于函数外面的切片没有变化。
+```
+slice_test := []int{1, 2, 3, 4, 5}
+fmt.Println(unsafe.Sizeof(slice_test))
+fmt.Printf("main:%#v,%#v,%#v\n", slice_test, len(slice_test), cap(slice_test))
+slice_value(slice_test)
+fmt.Printf("main:%#v,%#v,%#v\n", slice_test, len(slice_test), cap(slice_test))
+slice_ptr(&slice_test)
+fmt.Printf("main:%#v,%#v,%#v\n", slice_test, len(slice_test), cap(slice_test))
+fmt.Println(unsafe.Sizeof(slice_test))
+func slice_value(slice_test []int) {
+    slice_test[1] = 100                // 函数外的slice确实有被修改
+    slice_test = append(slice_test, 6) // 函数外的不变
+    fmt.Printf("slice_value:%#v,%#v,%#v\n", slice_test, len(slice_test), cap(slice_test))
+}
+
+func slice_ptr(slice_test *[]int) { // 这样才能修改函数外的slice
+    *slice_test = append(*slice_test, 7)
+    fmt.Printf("slice_ptr:%#v,%#v,%#v\n", *slice_test, len(*slice_test), cap(*slice_test))
+}
+
+//结果如下：
+24
+main:[]int{1, 2, 3, 4, 5},5,5
+
+slice_value:[]int{1, 100, 3, 4, 5, 6},6,10
+main:[]int{1, 100, 3, 4, 5},5,5
+
+slice_ptr:[]int{1, 100, 3, 4, 5, 7},6,10
+main:[]int{1, 100, 3, 4, 5, 7},6,10
+24
+```
+slice 的底层是数组指针，所以 slice a 和 b 指向的是同一个底层数组，所以当修改 s[0] 时，a 也会被修改。
+但是append改变a的时候并不会改变b。
+```
+a := []int{1, 2, 3, 4}
+b := a
+a[0] = 9
+// a 和 b 都是  [9 2 3 4]
+a = append(a, 5) //此时会导致切片a扩容,会创建了新数组替换旧数组,a的内存地址也会变化。b也不等于a了。
+a[0] = 1 //此时a改变，但是b不变。
+
+a := make([]int, 4, 10)
+a[0] = 1
+a[1] = 2
+a[2] = 3
+a[3] = 4
+
+b := a
+a = append(a, 5) //此时由于a的容量够，不会扩容，,a的内存地址不会变化
+a[0] = 1   //此时a和b都会改变
+```
+
+建议：做 slice 截取时建议用两个参数，尤其是从底层数组进行切片操作时，因为这样在进行第一次 append 操作时，会给切片重新分配空间，这样减少切片对数组的影响。
+
+结论：s = s[low : high : max] 切片的三个参数的切片截取的意义为 low 为截取的起始下标（含）， high 为窃取的结束下标（不含 high），max 为切片保留的原切片的最大下标（不含 max）；即新切片从老切片的 low 下标元素开始，len = high - low, cap = max - low；high 和 max 一旦超出在老切片中越界，就会发生 runtime err，slice out of range。另外如果省略第三个参数的时候，第三个参数默认和第二个参数相同，即 len = cap。max必须要大于等于high。
+```
+s1 := []int {0, 1, 2, 3, 4, 5, 6,7, 8, 9} //长度和容量都为10
+s := s1[1:9:10] //正确
+s := s1[1:9:11] //出错：slice bounds out of range
+```
 
 ## 指针
 
@@ -502,3 +656,91 @@ for i := 0; i < 3; i+=1 {
 var ptr **int;
 ```
 指针也可以作为函数的参数，形如`func swap(x *int, y *int)`。
+
+---
+
+## 结构体
+```
+//结构体的格式如下：
+type struct_variable_type struct {
+   member definition
+   member definition
+   ...
+   member definition
+}
+//声明语法格式如下：
+variable_name := structure_variable_type {value1, value2...valuen}
+
+variable_name := structure_variable_type { key1: value1, key2: value2..., keyn: valuen}
+
+
+```
+如果要访问结构体成员，需要使用点号 . 操作符，格式为：结构体.成员名。
+结构体作为函数参数的值传递，如果要想在参数中修改结构体的信息，需要传入结构体指针。
+
+struct 类似于 java 中的类，可以在 struct 中定义成员变量。
+要访问成员变量，可以有两种方式：
+- 1.通过 struct 变量.成员 变量来访问。
+- 2.通过 struct 指针.成员 变量来访问。
+不需要通过 getter, setter 来设置访问权限。
+```
+type Rect struct{   //定义矩形类
+    x,y float64       //类型只包含属性，并没有方法
+    width,height float64
+}
+func (r *Rect) Area() float64{    //为Rect类型绑定Area的方法，*Rect为指针引用可以修改传入参数的值
+    return r.width*r.height         //方法归属于类型，不归属于具体的对象，声明该类型的对象即可调用该类型的方法
+}
+```
+
+结构体中属性的首字母大小写问题
+
+- 首字母大写相当于 public。
+- 首字母小写相当于 private。
+注意: 这个 public 和 private 是相对于包（go 文件首行的 package 后面跟的包名）来说的。
+结构体如果只在当前包内使用，结构体的属性不用区分大小写。如果想要被其他的包引用，那么结构体的属性的首字母需要大写。
+敲黑板，划重点:当要将结构体对象转换为 JSON 时，对象中的属性首字母必须是大写，才能正常转换为 JSON。
+```
+type Person struct {
+    Name string　　　　　　//Name字段首字母大写
+    age int               //age字段首字母小写
+}
+
+person:=Person{"小明",18}
+if result,err:=json.Marshal(&person);err==nil{  //json.Marshal 将对象转换为json字符串
+    fmt.Println(string(result))
+//结果为：
+{"Name":"小明"}    //只有Name，没有age
+}
+
+//如果修改为：
+type Person  struct{
+   　　Name  string      //都是大写
+   　　Age    int               
+}
+//结果为：
+{"Name":"小明","Age":18}   //两个字段都有
+//那这样 JSON 字符串以后就只能是大写了么？ 当然不是，可以使用 tag 标记要返回的字段名。
+type Person  struct{
+   　　Name  string   `json:"name"`　  //标记json名字为name　　　
+   　　Age    int     `json:"age"`    //变量名还得都为首字母大写
+   　　Time int64    `json:"-"`        // 标记忽略该字段
+
+}
+//结果为：
+{"name":"小明","age":18}
+
+```
+
+## range
+range 关键字用于 for 循环中迭代数组(array)、切片(slice)、通道(channel)或集合(map)的元素。在数组和切片中它返回元素的索引和索引对应的值，在集合中返回 key-value 对。
+```
+for key, value := range oldMap {
+    newMap[key] = value
+}
+//只想读取 key
+for key := range oldMap
+for key, _ := range oldMap
+//只想读取 value
+for _, value := range oldMap
+```
