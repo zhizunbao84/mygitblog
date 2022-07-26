@@ -68,3 +68,20 @@ user@user-PC:~/Desktop$ (ERROR-7441 ime.c:303) 输入法: 打开/usr/lib/mips64e
 ```
 看错误提示可知，是 libssl.so.1.1 这个文件出问题了，这个文件是opensll软件的
 可以`sudo apt install openssl --reinstall`重新安装一下，问题解决。
+
+---
+
+## 任务栏卡死
+使用中经常会出现，突然一下任务栏就没反应了，点击没反应，甚至时间显示不走了。
+可以`ctrl+alt+del`，然后选择“系统监视器”，相当于任务管理器，在“所有进程”中选择“dde-dock”，强制结束进程。
+
+## 常见命令
+1.dde-dock（提供任务栏功能）
+2.dde-launcher（提供应用启动器功能）
+3.dde-control-center（提供桌面设置功能）
+4.dde-desktop（提供桌面壁纸及桌面目录管理功能）
+5.dde-lock（提供用户锁屏功能）
+6.dde-shutdown（用户电源和会话操作功能）
+7.dde-file-manager（提供文件管理功能）
+8.dde-polkit-agent（提供用户鉴权对话框功能）
+9.deepin-screensaver （屏保程序）
