@@ -229,6 +229,7 @@ for _, value := range map1 {
 ## 函数
 定义格式如下：
 ```
+//函数名后面的大括号只能跟在函数名后面，不能另起一行
 func function_name( [parameter list] ) [return_types] {
    函数体
 }
