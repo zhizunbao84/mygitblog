@@ -123,7 +123,24 @@ _ 实际上是一个只写变量，你不能得到它的值。这样做是因为
 const identifier [type] = value
 const c_name1, c_name2 = value1, value2
 ```
+常量无法修改，修改就报错。
 常量可以用len(), cap(), unsafe.Sizeof()函数计算表达式的值。常量表达式中，函数必须是内置函数，否则编译不过。
+在定义常量组时，如果不提供初始值，则表示将使用上行的表达式。
+```
+const (
+    a = 1
+    b
+    c
+    d
+)
+
+  fmt.Println(a)
+  // b、c、d没有初始化，使用上一行(即a)的值
+  fmt.Println(b)   // 输出1
+  fmt.Println(c)   // 输出1
+  fmt.Println(d)   // 输出1
+```
+
 ### iota
 iota，特殊常量，可以认为是一个可以被编译器修改的常量。
 iota 在 const关键字出现时将被重置为 0(const 内部的第一行之前)，const 中每新增一行常量声明将使 iota 计数一次(iota 可理解为 const 语句块中的行索引)。
