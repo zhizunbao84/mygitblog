@@ -560,6 +560,9 @@ struct Slice
 所以 unsafe.Sizeof(切片)永远都是 24。
 
 当把 slice 作为参数，本身传递的是值，但其内容就 byte* array，实际传递的是引用，所以可以在函数内部修改，但如果对 slice 本身做 append，而且导致 slice 进行了扩容，实际扩容的是函数内复制的一份切片，对于函数外面的切片没有变化。
+之所以对slice的传递可以修改原slice数据，是因为使用了slice这个引用类型的指针进行的传递，但依旧是值传递。
+指针值传递”相当于把指针复制了一份，结果就是两个指针指向同一个值，之后不管使用哪个指针，改的都是同一个值。实在不懂的话建议把P10再多看两遍。待考证！
+
 ```
 slice_test := []int{1, 2, 3, 4, 5}
 fmt.Println(unsafe.Sizeof(slice_test))
@@ -761,4 +764,285 @@ for key := range oldMap
 for key, _ := range oldMap
 //只想读取 value
 for _, value := range oldMap
+```
+
+---
+
+## Map(集合)
+Map 是一种无序的键值对的集合。Map 最重要的一点是通过 key 来快速检索数据，key 类似于索引，指向数据的值。
+Map 是一种集合，所以我们可以像迭代数组和切片那样迭代它。不过，Map 是无序的，我们无法决定它的返回顺序，这是因为 Map 是使用 hash 表来实现的。
+```
+//可以使用内建函数 make 也可以使用 map 关键字来定义 Map
+/* 声明变量，默认 map 是 nil */
+var map_variable map[key_data_type]value_data_type
+
+/* 使用 make 函数 */
+map_variable := make(map[key_data_type]value_data_type)
+```
+如果不初始化 map，那么就会创建一个 nil map。nil map 不能用来存放键值对。
+```
+/*查看元素在集合中是否存在 */
+capital, ok := countryCapitalMap [ "American" ] /*如果确定是真实的,则存在,否则不存在 */
+/*fmt.Println(capital) */
+/*fmt.Println(ok) */
+if (ok) {
+    fmt.Println("American 的首都是", capital)
+} else {
+    fmt.Println("American 的首都不存在")
+}
+
+/*删除元素*/ 
+//key存在则删除，key不存在则不操作
+delete(countryCapitalMap, "France")
+```
+
+
+## 类型转换
+`type_name(expression)`，type_name 为类型，expression 为表达式。
+go 不支持隐式转换类型。
+
+## 接口
+主要目的是为了不同类型的数据提供统一的接口（方法）。
+```
+// 定义接口
+type Phone interface {
+    call() string 
+}
+
+type Android struct {
+    brand string
+}
+
+type IPhone struct {
+    version string
+}
+
+func (android Android) call() string {
+    return "I am Android " + android.brand
+}
+
+func (iPhone IPhone) call() string {
+    return "I am iPhone " + iPhone.version
+}
+
+//这个里面参数p既可以是Android，也可以是IPhone
+//因为这两种数据类型都实现了Phone接口
+func printCall(p Phone) {
+    fmt.Println(p.call() + ", I can call you!")
+}
+```
+如果想要通过接口方法修改属性，需要在传入指针的结构体才行。
+
+```
+//实现组合接口
+type reader interface {
+    read() string
+}
+
+type writer interface {
+    write() string
+}
+
+type rw interface {
+    reader //不能写成reader()
+    writer  //不能写成writer()
+}
+
+type mouse struct{}
+
+func (m mouse) read() string {
+    return "mouse reading..."
+}
+
+func (m *mouse) write() string {
+    return "mouse writing..."
+}
+
+var rw1 rw
+// 只要有一个指针实现，则此处必须是指针
+rw1 = &mouse{}
+// rw1 = new(mouse)
+
+fmt.Println(rw1.read())
+fmt.Println(rw1.write())
+
+
+
+// interface本质就是一个指针
+type Reader interface {  
+    ReadBook()
+}
+
+type Writer interface {
+    WriteBook()
+}
+
+type Book struct{
+}
+
+func (t *Book) ReadBook() {
+    fmt.Println("read a book")
+}
+
+func (t *Book) WriteBook() {
+    fmt.Println("write a book")
+}
+
+func main() {
+    // b : pair<type:Book, value:book{}地址>
+    b := &Book{}
+    
+    // r: pair<type, value>
+    var r Reader
+    // r : pair<type:Book, value:book{}地址>   pair是不变的
+    r = b   // interface r 本质就是一个指针，所以b也要是指针类型
+    r.ReadBook()
+    
+    var w Writer
+    // w : pair<type:Book, value:book{}地址>    pair是不变的
+    w = r.(Writer)   // w和r的type一致，所以断言成功(断言就是强转?)
+    
+    w.WriteBook()
+}
+```
+
+## 错误处理
+
+1、panic 在没有用 recover 前以及在 recover 捕获那一级函数栈，panic 之后的代码均不会执行；一旦被 recover 捕获后，外层的函数栈代码恢复正常，所有代码均会得到执行；
+ 2、panic 后，不再执行后面的代码，立即按照逆序执行 defer，并逐级往外层函数栈扩散；defer 就类似 finally；
+ 3、利用 recover 捕获 panic 时，defer 需要再 panic 之前声明，否则由于 panic 之后的代码得不到执行，因此也无法 recover；
+
+```
+func main() {
+  fmt.Println("外层开始111")
+  defer func() {
+    fmt.Println("外层准备recover222")
+    if err := recover(); err != nil {
+      fmt.Printf("%#v-%#v\n", "外层", err) // err已经在上一级的函数中捕获了，这里没有异常，只是例行先执行defer，然后执行后面的代码
+    } else {
+      fmt.Println("外层没做啥事333")
+    }
+    fmt.Println("外层完成recover444")
+  }()
+  fmt.Println("外层即将异常555")
+  f()
+  fmt.Println("外层异常后666")
+  defer func() {
+    fmt.Println("外层异常后defer777")
+  }()
+}
+
+func f() {
+  fmt.Println("内层开始8888")
+  defer func() {
+    fmt.Println("内层recover前的defer9999")
+  }()
+
+  defer func() {
+    fmt.Println("内层准备recover1010101010")
+    if err := recover(); err != nil {
+      fmt.Printf("%#v-%#v\n", "内层", err) // 这里err就是panic传入的内容
+    }
+
+    fmt.Println("内层完成recover111111")
+  }()
+
+  defer func() {
+    fmt.Println("内层异常前recover后的defer12121212")
+  }()
+
+  panic("异常信息131313")
+  //这后面的代码不会执行
+  defer func() {
+    fmt.Println("内层异常后的defer141414")
+  }()
+
+  fmt.Println("内层异常后语句151515") //recover捕获的一级或者完全不捕获这里开始下面代码不会再执行
+}
+```
+
+## 并发
+Go 语言支持并发，我们只需要通过 go 关键字来开启 goroutine 即可。
+goroutine 是轻量级线程，goroutine 的调度是由 Golang 运行时进行管理的。
+Go 允许使用 go 语句开启一个新的运行期线程， 即 goroutine，以一个不同的、新创建的 goroutine 来执行一个函数。 同一个程序中的所有 goroutine 共享同一个地址空间。
+goroutine 语法格式：
+```
+go 函数名( 参数列表 )
+```
+### 通道（channel）
+通道（channel）是用来传递数据的一个数据结构。
+通道可用于两个 goroutine 之间通过传递一个指定类型的值来同步运行和通讯。操作符 <- 用于指定通道的方向，发送或接收。如果未指定方向，则为双向通道。
+```
+ch <- v    // 把 v 发送到通道 ch
+v := <-ch  // 从 ch 接收数据
+           // 并把值赋给 v
+//Channel 是可以控制读写权限的 具体如下:
+go func(c chan int) { //读写均可的channel c } (a)
+go func(c <- chan int) { //只读的Channel } (a)
+go func(c chan <- int) {  //只写的Channel } (a)
+
+//声明一个通道很简单,通道在使用前必须先创建
+ch := make(chan int)
+//TYPE 指的是 channel 中传输的数据类型，第二个参数是可选的，指通道的缓冲区大小
+make(chan TYPE {, NUM})  
+```
+注意：默认情况下，通道是不带缓冲区的。发送端发送数据，同时必须有接收端相应的接收数据。
+
+使用close(c chan)关闭通道,并不会丢失里面的数据，只是让读取通道数据的时候不会读完之后一直阻塞等待新数据写入
+```
+func say(s string) {
+    for i := 0; i < 5; i++ {
+        time.Sleep(100 * time.Millisecond)
+        fmt.Println(s, (i+1)*100)
+    }
+}
+func say2(s string) {
+    for i := 0; i < 5; i++ {
+        time.Sleep(150 * time.Millisecond)
+        fmt.Println(s, (i+1)*150)
+    }
+}
+func main() {
+    //由于say2函数执行完所需的时间比say函数要长
+    //当主线程中say函数执行完后，也不会等子线程中say2函数执行完，而是程序强制退出
+    go say2("world")
+    say("hello")
+}
+
+
+
+func say2(s string, ch chan int) {
+    for i := 0; i < 5; i++ {
+        time.Sleep(150 * time.Millisecond)
+        fmt.Println(s, (i+1)*150)
+    }
+    ch <- 0
+    close(ch)
+}
+func main() {
+    //引入一个信道，默认的，信道的存消息和取消息都是阻塞的，
+    //在 goroutine 中执行完成后给信道一个值 0，则主函数会一直等待信道中的值
+    //一旦信道有值，主函数才会结束。
+    ch := make(chan int)
+    go say2("world", ch)
+    say("hello")
+    fmt.Println(<-ch)
+}
+
+//通道遵循先进先出原则。
+ch := make(chan int, 2)
+
+ch <- 1
+a := <-ch
+ch <- 2
+ch <- 3
+
+fmt.Println(<-ch)
+fmt.Println(<-ch)
+fmt.Println(a)
+// 结果为
+2
+3
+1
+
 ```
