@@ -103,5 +103,5 @@ sudo apt install libblas-dev liblapack-dev
       The headers or library files could not be found for zlib,
       a required dependency when compiling Pillow from source.
 ```
-在网上找了很多，也都不能解决，始终提示这个错误。
-但是uos中提高了编译好的包，执行`sudo apt install python-pil`进行安装，会安装在`/usr/lib/python3/dist-packages`,直接拷贝到你的python虚拟环境的`lib/python3.7/site-packages`中即可。
+在 https://github.com/python-pillow/Pillow/issues/6471  中提到,是由于setuptools版本太高的原因,降级至62.2.0解决.
+在uos中提供了编译好的包，执行`sudo apt install python-pil`进行安装，会安装在`/usr/lib/python3/dist-packages`,直接拷贝到你的python虚拟环境的`lib/python3.7/site-packages`中即可,但是版本太低.
