@@ -106,3 +106,10 @@ sudo apt install libblas-dev liblapack-dev
 ```
 在 https://github.com/python-pillow/Pillow/issues/6471  中提到,是由于setuptools版本太高的原因,降级至62.2.0解决.
 在uos中提供了编译好的包，执行`sudo apt install python-pil`进行安装，会安装在`/usr/lib/python3/dist-packages`,直接拷贝到你的python虚拟环境的`lib/python3.7/site-packages`中即可,但是版本太低.
+
+## 安装demjson
+提示`error in demjson setup command: use_2to3 is invalid`错误.
+由于 demjson 2.2.4 兼容python2和python3，当安装环境为python3时，有一部分代码需要转换
+Setuptools从版本58.0.0开始不再支持2to3的builds，所以导致 demjson 2.2.4安装后不再可用，
+降级setuptools版本即可解决
+`pip install setuptools==57.5.0`
