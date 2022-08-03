@@ -85,3 +85,22 @@ user@user-PC:~/Desktop$ (ERROR-7441 ime.c:303) 输入法: 打开/usr/lib/mips64e
 7.dde-file-manager（提供文件管理功能）
 8.dde-polkit-agent（提供用户鉴权对话框功能）
 9.deepin-screensaver （屏保程序）
+
+
+## python使用
+### 安装Scipy
+在python虚拟环境中配置安装Scipy时提示：
+```
+To build Scipy from sources, BLAS & LAPACK libraries need to be installed.
+```
+解决：
+```
+sudo apt install libblas-dev liblapack-dev
+```
+### 安装pillow
+提示：
+```
+      The headers or library files could not be found for zlib,
+      a required dependency when compiling Pillow from source.
+```
+在网上找了很多，也都不能解决，始终提示这个错误。
