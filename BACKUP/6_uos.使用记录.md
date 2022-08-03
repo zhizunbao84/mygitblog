@@ -88,6 +88,7 @@ user@user-PC:~/Desktop$ (ERROR-7441 ime.c:303) 输入法: 打开/usr/lib/mips64e
 
 
 ## python使用
+默认使用的是python 3.7.3
 ### 安装Scipy
 在python虚拟环境中配置安装Scipy时提示：
 ```
