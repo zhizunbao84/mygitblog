@@ -104,3 +104,4 @@ sudo apt install libblas-dev liblapack-dev
       a required dependency when compiling Pillow from source.
 ```
 在网上找了很多，也都不能解决，始终提示这个错误。
+但是uos中提高了编译好的包，执行`sudo apt install python-pil`进行安装，会安装在`/usr/lib/python3/dist-packages`,直接拷贝到你的python虚拟环境的`lib/python3.7/site-packages`中即可。
