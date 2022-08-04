@@ -113,3 +113,6 @@ sudo apt install libblas-dev liblapack-dev
 Setuptools从版本58.0.0开始不再支持2to3的builds，所以导致 demjson 2.2.4安装后不再可用，
 降级setuptools版本即可解决
 `pip install setuptools==57.5.0`
+
+## fatal error: openssl/xxx.h: 没有那个文件或目录
+安装libssl-dev包即可
